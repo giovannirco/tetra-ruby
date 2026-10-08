@@ -56,7 +56,11 @@ Operations live in one list in [`lib/tetra/calc.rb`](lib/tetra/calc.rb). Adding 
 
 1. Add an entry:
    ```ruby
-   Operation.new(name: 'mod', symbol: '%', label: 'Modulo', apply: ->(a, b) { truncated_remainder(a, b) }),
+   Operation.new(name: 'mod', symbol: '%', label: 'Modulo', apply: lambda { |a, b|
+     raise Error.new('division by zero', 'division_by_zero') if b.zero?
+
+     a.remainder(b) # sign of the dividend, like Go's and JavaScript's %
+   }),
    ```
 2. Add its cases to `spec/calc_spec.rb`.
 
