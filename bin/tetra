@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Serves the Tetra API and UI on port 8000; SIGTERM/SIGINT shut it down
+# gracefully (see Tetra::Server).
+require_relative '../lib/tetra/server'
+
+begin
+  server = Tetra::Server.new
+rescue ArgumentError, SystemCallError => e
+  warn "tetra: #{e.message}"
+  exit 1
+end
+
+# Trap context cannot take locks, so the shutdown runs on its own thread.
+%w[TERM INT].each { |signal| trap(signal) { Thread.new { server.stop } } }
+server.wait

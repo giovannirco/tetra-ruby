@@ -1,0 +1,24 @@
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - vendor/**/*
+
+Layout/LineLength:
+  Max: 120
+Metrics/AbcSize:
+  Enabled: false
+Metrics/MethodLength:
+  Max: 25
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+    - lib/tetra/app.rb
+Metrics/ClassLength:
+  Max: 150
+Naming/MethodParameterName:
+  AllowedNames: [a, b, io, k, v]
+Style/Documentation:
+  Exclude:
+    - spec/**/*

@@ -1,0 +1,56 @@
+# SLO-style alerts for Tetra. The same expressions become a PrometheusRule
+# on Kubernetes (docs/PLAN.md). 4xx responses are the client's fault, so
+# only 5xx count against availability.
+groups:
+  - name: tetra.recording
+    rules:
+      - record: tetra:http_requests:rate5m
+        expr: sum by (route) (rate(tetra_http_requests_total{route=~"/api/.*"}[5m]))
+      - record: tetra:http_5xx_ratio:rate5m
+        expr: |
+          (sum(rate(tetra_http_requests_total{route=~"/api/.*",status=~"5.."}[5m])) or vector(0))
+            / clamp_min(sum(rate(tetra_http_requests_total{route=~"/api/.*"}[5m])), 1e-9)
+      - record: tetra:http_latency_p99:5m
+        expr: histogram_quantile(0.99, sum by (le) (rate(tetra_http_request_duration_seconds_bucket{route=~"/api/.*"}[5m])))
+
+  - name: tetra.alerts
+    rules:
+      - alert: TetraDown
+        expr: up{job="tetra"} == 0
+        for: 1m
+        labels: { severity: page }
+        annotations:
+          summary: Tetra target {{ $labels.instance }} is not answering scrapes.
+
+      - alert: TetraAvailabilityBudgetBurn
+        # 99.9% availability SLO; 14.4x burn exhausts a 30-day budget in ~2 days.
+        expr: tetra:http_5xx_ratio:rate5m > (14.4 * 0.001)
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: Tetra 5xx ratio is {{ $value | humanizePercentage }}, burning the error budget fast.
+
+      - alert: TetraLatencyHigh
+        # Latency SLO: p99 under 50 ms for /api routes.
+        expr: tetra:http_latency_p99:5m > 0.05
+        for: 5m
+        labels: { severity: ticket }
+        annotations:
+          summary: Tetra /api p99 latency is {{ $value | humanizeDuration }}.
+
+      - alert: TetraClientErrorsSpike
+        # Not an SLO breach: a caller is sending bad input. Worth a look, not a page.
+        expr: |
+          sum(rate(tetra_calc_operations_total{outcome!="ok"}[5m]))
+            / clamp_min(sum(rate(tetra_calc_operations_total[5m])), 1e-9) > 0.25
+        for: 10m
+        labels: { severity: info }
+        annotations:
+          summary: More than 25% of calculations are rejected (bad input, overflow or division by zero).
+
+      - alert: TetraLiveEventsDropped
+        expr: increase(tetra_live_events_dropped_total[5m]) > 0
+        for: 5m
+        labels: { severity: info }
+        annotations:
+          summary: The live stream is dropping events for slow subscribers.

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tetra</title>
+  <meta name="description" content="Tetra: a four-operation arithmetic API with live request telemetry, drawn in three.js.">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <script type="module" src="/js/main.js"></script>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div id="labels" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 3 L29 27 L3 27 Z M16 3 L16 19 M3 27 L16 19 L29 27" />
+      </svg>
+      <div>
+        <h1>Tetra</h1>
+        <p class="brand-sub">four operations · <span id="impl">…</span></p>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip" id="chip-live" data-state="off"><i></i>stream</span>
+      <span class="chip" id="chip-ready" data-state="off"><i></i>readiness</span>
+      <span class="chip chip-mono" id="chip-version" title="version · commit · pod">…</span>
+    </div>
+  </header>
+
+  <main class="panels">
+    <section class="panel calc" aria-labelledby="calc-title">
+      <h2 id="calc-title">Calculator</h2>
+      <form id="calc-form" autocomplete="off">
+        <div class="terms">
+          <label>term_one
+            <input id="term-one" name="term_one" inputmode="numeric" value="4" spellcheck="false">
+          </label>
+          <label>term_two
+            <input id="term-two" name="term_two" inputmode="numeric" value="1" spellcheck="false">
+          </label>
+        </div>
+        <div class="ops" id="ops" role="group" aria-label="Operation"></div>
+      </form>
+      <output class="result" id="result" aria-live="polite">
+        <span class="result-label">result</span>
+        <span class="result-value" id="result-value">—</span>
+      </output>
+      <dl class="request" id="request">
+        <div><dt>request</dt><dd id="req-line">—</dd></div>
+        <div><dt>status</dt><dd id="req-status">—</dd></div>
+        <div><dt>latency</dt><dd id="req-latency">—</dd></div>
+        <div><dt>request id</dt><dd id="req-id">—</dd></div>
+      </dl>
+      <button type="button" class="ghost" id="copy-curl">copy as curl</button>
+    </section>
+
+    <section class="panel telemetry" aria-labelledby="tel-title">
+      <h2 id="tel-title">Live telemetry <small>last 60 s</small></h2>
+      <div class="kpis">
+        <div class="kpi"><span class="kpi-value" id="kpi-rps">0</span><span class="kpi-label">req/s</span></div>
+        <div class="kpi"><span class="kpi-value" id="kpi-err">0%</span><span class="kpi-label">errors</span></div>
+        <div class="kpi"><span class="kpi-value" id="kpi-total">0</span><span class="kpi-label">requests</span></div>
+      </div>
+      <canvas class="spark" id="spark" height="56" aria-label="Requests per second, last 60 seconds"></canvas>
+      <div class="latency">
+        <div><span>p50</span><b id="lat-p50">—</b></div>
+        <div><span>p95</span><b id="lat-p95">—</b></div>
+        <div><span>p99</span><b id="lat-p99">—</b></div>
+      </div>
+      <ul class="bars" id="bars"></ul>
+    </section>
+
+    <section class="panel traffic" aria-labelledby="traffic-title">
+      <h2 id="traffic-title">Traffic</h2>
+      <div class="traffic-controls">
+        <button type="button" id="btn-burst">burst ×50</button>
+        <button type="button" id="btn-steady" aria-pressed="false">steady 10/s</button>
+        <button type="button" id="btn-chaos" aria-pressed="false">chaos</button>
+      </div>
+      <ol class="log" id="log" aria-live="off"></ol>
+    </section>
+  </main>
+
+  <footer class="links">
+    <a href="/api">/api</a>
+    <a href="/version">/version</a>
+    <a href="/healthz">/healthz</a>
+    <a href="/readyz">/readyz</a>
+    <a href="/metrics">/metrics</a>
+  </footer>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>

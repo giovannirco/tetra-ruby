@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Container healthcheck: exits 0 when /healthz on the local port answers 200.
+require 'net/http'
+require_relative '../lib/tetra/config'
+
+begin
+  port = Tetra::Config.load.port
+  res = Net::HTTP.start('127.0.0.1', port, open_timeout: 2, read_timeout: 2) { |http| http.get('/healthz') }
+  exit(res.code == '200' ? 0 : 1)
+rescue StandardError
+  exit 1
+end

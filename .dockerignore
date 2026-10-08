@@ -1,0 +1,8 @@
+.git
+.github
+coverage
+docs
+spec
+*.md
+.bundle
+vendor
